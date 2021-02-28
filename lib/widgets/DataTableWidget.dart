@@ -84,20 +84,24 @@ class _DataTableWidgetState extends State<DataTableWidget> {
 
       if (false == column.show) continue;
 
-      listDataColumn.add(DataColumn(
-          onSort: (columnIndex, ascending) {
-            setState(() {
-              _sortColumnIndex = columnIndex;
-              _sortAscending = ascending;
-            });
-          },
-          tooltip: column.tooltip,
-          label: Expanded(
-              child: Text(column.label, textAlign: TextAlign.center))));
+      if ("DELETE" == columnName) {
+        listDataColumn.add(DataColumn(
+            tooltip: column.tooltip,
+            label: Expanded(
+                child: Text(column.label, textAlign: TextAlign.center))));
+      } else {
+        listDataColumn.add(DataColumn(
+            onSort: (columnIndex, ascending) {
+              setState(() {
+                _sortColumnIndex = columnIndex;
+                _sortAscending = ascending;
+              });
+            },
+            tooltip: column.tooltip,
+            label: Expanded(
+                child: Text(column.label, textAlign: TextAlign.center))));
+      }
     }
-    listDataColumn.add(DataColumn(
-        tooltip: "",
-        label: Expanded(child: Text('Удалить', textAlign: TextAlign.center))));
     return listDataColumn;
   }
 
@@ -118,71 +122,75 @@ class _DataTableWidgetState extends State<DataTableWidget> {
         String ceilText = _getsnapshot()[rowIdx][columnName].toString();
 
         TextEditingController tec = TextEditingController(text: ceilText);
-        ldc.add(column.editable
-            ? DataCell(
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(width: 1),
-                  ),
-                  width: column.width,
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      hintText: "Enter a message",
-                      suffixIcon: IconButton(
-                        onPressed: () => tec.clear(),
-                        icon: Icon(Icons.clear),
-                      ),
+        if ("DELETE" == columnName) {
+          if ("1" != ceilText) continue;
+
+          ldc.add(DataCell(
+            Container(
+              decoration: BoxDecoration(border: Border.all(width: 1)),
+              alignment: Alignment.center,
+              child: SizedBox.fromSize(
+                size: Size(56, 56), // button width and height
+                child: Material(
+                  child: InkWell(
+                    splashColor: Colors.red, // splash color
+                    onTap: () {}, // button pressed
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(Icons.delete), // icon
+                      ],
                     ),
-                    textAlign: column.align,
-                    style: TextStyle(fontSize: 15),
-                    controller: tec,
-                    //initialValue: ceilText,
-                    keyboardType: column.editableTextInputType,
-                    onFieldSubmitted: (val) {
-                      String updateSql =
-                          'UPDATE ${widget.updateTableName} SET ${_getsnapshot().first.keys.elementAt(ceilIdx).toString()}=${val.toString()} WHERE ${widget.updateTablePK}=${_getsnapshot()[rowIdx][widget.updateTablePK].toString()}';
-
-                      SqliteUtils(widget.dbName).executeReader(updateSql);
-                      //_getsnapshot()[rowIdx][columnName] = val;
-                    },
-                  ),
-                ),
-                //showEditIcon: true,
-              )
-            : DataCell(Container(
-                decoration: BoxDecoration(border: Border.all(width: 1)),
-                alignment: Alignment.center,
-                width: column.width,
-                child: Text(
-                  ceilText,
-                  textAlign: column.align,
-                  style: TextStyle(fontSize: 15),
-                ),
-              )));
-      }
-
-      ldc.add(DataCell(
-        Container(
-          alignment: Alignment.center,
-          child: SizedBox.fromSize(
-            size: Size(56, 56), // button width and height
-            child: ClipOval(
-              child: Material(
-                child: InkWell(
-                  splashColor: Colors.red, // splash color
-                  onTap: () {}, // button pressed
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.delete), // icon
-                    ],
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-      ));
+          ));
+        } else {
+          ldc.add(column.editable
+              ? DataCell(
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(width: 1),
+                    ),
+                    width: column.width,
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        hintText: "Enter a message",
+                        suffixIcon: IconButton(
+                          onPressed: () => tec.clear(),
+                          icon: Icon(Icons.clear),
+                        ),
+                      ),
+                      textAlign: column.align,
+                      style: TextStyle(fontSize: 15),
+                      controller: tec,
+                      //initialValue: ceilText,
+                      keyboardType: column.editableTextInputType,
+                      onFieldSubmitted: (val) {
+                        String updateSql =
+                            'UPDATE ${widget.updateTableName} SET ${_getsnapshot().first.keys.elementAt(ceilIdx).toString()}=${val.toString()} WHERE ${widget.updateTablePK}=${_getsnapshot()[rowIdx][widget.updateTablePK].toString()}';
+
+                        SqliteUtils(widget.dbName).executeReader(updateSql);
+                        //_getsnapshot()[rowIdx][columnName] = val;
+                      },
+                    ),
+                  ),
+                  //showEditIcon: true,
+                )
+              : DataCell(Container(
+                  decoration: BoxDecoration(border: Border.all(width: 1)),
+                  alignment: Alignment.center,
+                  width: column.width,
+                  child: Text(
+                    ceilText,
+                    textAlign: column.align,
+                    style: TextStyle(fontSize: 15),
+                  ),
+                )));
+        }
+      }
+
       listDataRow.add(DataRow(
         // color: MaterialStateColor.resolveWith((states) {
         //   return rowIdx % 2 == 0 ? Colors.red : Colors.black; //make tha magic!

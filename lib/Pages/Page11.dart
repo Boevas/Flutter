@@ -49,7 +49,7 @@ class _Page11State extends State<Page11> {
             child: DataTableWidget(
                 dbName: "130",
                 viewSqlScript:
-                    "SELECT CURRENT_ORDER.ID, TMC_GROUP.LABEL, CURRENT_ORDER.QUANTITY, CURRENT_ORDER.QUANTITYAUTO FROM CURRENT_ORDER INNER JOIN TMC_GROUP ON CURRENT_ORDER.ID_TMC_GROUP=TMC_GROUP.IDGROUP",
+                    "SELECT CURRENT_ORDER.ID, TMC_GROUP.LABEL, CURRENT_ORDER.QUANTITY, CURRENT_ORDER.QUANTITYAUTO,1 AS 'DELETE' FROM CURRENT_ORDER INNER JOIN TMC_GROUP ON CURRENT_ORDER.ID_TMC_GROUP=TMC_GROUP.IDGROUP LIMIT 20",
                 updateTableName: "CURRENT_ORDER",
                 updateTablePK: 'ID',
                 columns: {
@@ -86,6 +86,15 @@ class _Page11State extends State<Page11> {
                       tooltip: "Рекомендованное\nколичество\nтоваров\nв заказе",
                       editable: false,
                       editableTextInputType: TextInputType.number,
+                      width: sizemonitorwidth / 4,
+                      align: TextAlign.center),
+                  'DELETE': DataColumnEx(
+                      show: true,
+                      label: "Удалить",
+                      numeric: false,
+                      tooltip: "Удалить",
+                      editable: false,
+                      editableTextInputType: TextInputType.text,
                       width: sizemonitorwidth / 4,
                       align: TextAlign.center),
                 }),
