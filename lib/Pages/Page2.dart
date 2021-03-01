@@ -36,6 +36,7 @@ class _Page2State extends State<Page2> {
             DataTableWidget(
                 dbName: "130",
                 viewSqlScript: sqlController.text,
+                rowHeight: 100,
                 columns: {
                   'ID': DataColumnEx(
                     show: true,

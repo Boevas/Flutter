@@ -11,21 +11,25 @@ class DataColumnEx {
   TextInputType editableTextInputType;
   double width;
   TextAlign align;
-  DataColumnEx(
-      {@required this.show,
-      this.label = "",
-      this.tooltip = "",
-      this.numeric = false,
-      this.editable = false,
-      this.editableTextInputType = TextInputType.text,
-      this.width = 100,
-      this.align = TextAlign.left});
+  double fontSize;
+  DataColumnEx({
+    @required this.show,
+    this.label = "",
+    this.tooltip = "",
+    this.numeric = false,
+    this.editable = false,
+    this.editableTextInputType = TextInputType.text,
+    this.width = 100,
+    this.align = TextAlign.left,
+    this.fontSize = 20,
+  });
 }
 
 class DataTableWidget extends StatefulWidget {
   final String dbName;
   final String viewSqlScript;
   final Map<String, DataColumnEx> columns;
+  final double rowHeight;
   final String updateTableName;
   final String updateTablePK;
 
@@ -33,6 +37,7 @@ class DataTableWidget extends StatefulWidget {
     @required this.dbName,
     @required this.viewSqlScript,
     @required this.columns,
+    @required this.rowHeight,
     this.updateTableName,
     this.updateTablePK,
   });
@@ -88,7 +93,11 @@ class _DataTableWidgetState extends State<DataTableWidget> {
         listDataColumn.add(DataColumn(
             tooltip: column.tooltip,
             label: Expanded(
-                child: Text(column.label, textAlign: TextAlign.center))));
+                child: Text(
+              column.label,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: column.fontSize),
+            ))));
       } else {
         listDataColumn.add(DataColumn(
             onSort: (columnIndex, ascending) {
@@ -99,7 +108,11 @@ class _DataTableWidgetState extends State<DataTableWidget> {
             },
             tooltip: column.tooltip,
             label: Expanded(
-                child: Text(column.label, textAlign: TextAlign.center))));
+                child: Text(
+              column.label,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: column.fontSize),
+            ))));
       }
     }
     return listDataColumn;
@@ -125,27 +138,21 @@ class _DataTableWidgetState extends State<DataTableWidget> {
         if ("DELETE" == columnName) {
           if ("1" != ceilText) continue;
 
-          ldc.add(DataCell(
-            Container(
+          ldc.add(DataCell(Container(
               decoration: BoxDecoration(border: Border.all(width: 1)),
               alignment: Alignment.center,
-              child: SizedBox.fromSize(
-                size: Size(56, 56), // button width and height
-                child: Material(
-                  child: InkWell(
-                    splashColor: Colors.red, // splash color
-                    onTap: () {}, // button pressed
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(Icons.delete), // icon
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ));
+              width: column.width,
+              child: IconButton(
+                icon: Icon(Icons.delete),
+                iconSize: widget.rowHeight,
+                tooltip: column.tooltip,
+                onPressed: () {
+                  String updateSql =
+                      'DELETE FROM ${widget.updateTableName} WHERE ${widget.updateTablePK}=${_getsnapshot()[rowIdx][widget.updateTablePK].toString()}';
+                  SqliteUtils(widget.dbName).executeNonQuery(updateSql);
+                  setState(() {});
+                },
+              ))));
         } else {
           ldc.add(column.editable
               ? DataCell(
@@ -153,6 +160,7 @@ class _DataTableWidgetState extends State<DataTableWidget> {
                     decoration: BoxDecoration(
                       border: Border.all(width: 1),
                     ),
+                    alignment: Alignment.center,
                     width: column.width,
                     child: TextFormField(
                       decoration: InputDecoration(
@@ -163,7 +171,7 @@ class _DataTableWidgetState extends State<DataTableWidget> {
                         ),
                       ),
                       textAlign: column.align,
-                      style: TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: column.fontSize),
                       controller: tec,
                       //initialValue: ceilText,
                       keyboardType: column.editableTextInputType,
@@ -185,7 +193,7 @@ class _DataTableWidgetState extends State<DataTableWidget> {
                   child: Text(
                     ceilText,
                     textAlign: column.align,
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(fontSize: column.fontSize),
                   ),
                 )));
         }
@@ -239,7 +247,8 @@ class _DataTableWidgetState extends State<DataTableWidget> {
                 return DataTable(
                   horizontalMargin: 5,
                   columnSpacing: 0,
-
+                  dataRowHeight: widget.rowHeight,
+                  headingRowHeight: widget.rowHeight,
                   //headingRowColor:
                   //    MaterialStateColor.resolveWith((states) => Colors.blue),
                   sortAscending: _sortAscending,
