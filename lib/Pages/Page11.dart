@@ -63,7 +63,7 @@ class _Page11State extends State<Page11> {
                         )),
                     child: FittedBox(
                         fit: BoxFit.fitWidth,
-                        child: Text('Цель: Выручка 1000 ')),
+                        child: Text('Цель: Выручка 1000')),
                   ),
                 ),
                 Expanded(flex: 1, child: SizedBox.shrink()),
