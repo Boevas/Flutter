@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'Page1.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:test4/widgets/DataTableWidget.dart';
+import 'package:test4/OptimizeOrder.dart';
+import 'dart:developer';
+import 'package:test4/sqlite/Sqlite.dart';
 
 class Page11 extends StatefulWidget {
   @override
@@ -10,6 +13,29 @@ class Page11 extends StatefulWidget {
 
 class _Page11State extends State<Page11> {
   TextEditingController moneyCtrl = new TextEditingController(text: "10000");
+
+  FutureBuilder getsum() {
+    return FutureBuilder<Object>(
+      future: SqliteUtils("130")
+          .executeScalar('SELECT SUM(SUM) FROM CURRENT_ORDER ;'),
+      builder: (BuildContext c, AsyncSnapshot<Object> aspsh) {
+        if (!aspsh.hasData) return CircularProgressIndicator();
+        return Text(
+            'Сумма:${double.parse(aspsh.data.toString()).toStringAsFixed(2)}');
+      },
+    );
+  }
+
+  FutureBuilder getcount() {
+    return FutureBuilder<Object>(
+      future: SqliteUtils("130")
+          .executeScalar('SELECT COUNT(*) FROM CURRENT_ORDER;'),
+      builder: (BuildContext c, AsyncSnapshot<Object> aspsh) {
+        if (!aspsh.hasData) return CircularProgressIndicator();
+        return Text('Количество:${aspsh.data}');
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,12 +70,13 @@ class _Page11State extends State<Page11> {
               ],
             ),
           ),
+          Expanded(flex: 1, child: SizedBox.shrink()),
           Expanded(
             flex: 90,
             child: DataTableWidget(
                 dbName: "130",
                 viewSqlScript:
-                    "SELECT CURRENT_ORDER.ID, TMC_GROUP.LABEL, CURRENT_ORDER.QUANTITY, CURRENT_ORDER.QUANTITYAUTO,1 AS 'DELETE' FROM CURRENT_ORDER INNER JOIN TMC_GROUP ON CURRENT_ORDER.ID_TMC_GROUP=TMC_GROUP.IDGROUP LIMIT 50",
+                    "SELECT CURRENT_ORDER.ID, TMC_GROUP.LABEL, CURRENT_ORDER.QUANTITY, CURRENT_ORDER.QUANTITYAUTO,1 AS 'DELETE' FROM CURRENT_ORDER INNER JOIN TMC_GROUP ON CURRENT_ORDER.ID_TMC_GROUP=TMC_GROUP.IDGROUP",
                 rowHeight: 100,
                 updateTableName: "CURRENT_ORDER",
                 updateTablePK: 'ID',
@@ -107,8 +134,46 @@ class _Page11State extends State<Page11> {
                   ),
                 }),
           ),
+          Expanded(flex: 1, child: SizedBox.shrink()),
           Expanded(
             flex: 5,
+            child: Row(
+              children: [
+                Expanded(flex: 32, child: SizedBox.shrink()),
+                Expanded(flex: 2, child: SizedBox.shrink()),
+                Expanded(
+                  flex: 32,
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        border: Border.all(
+                          width: 1.0,
+                        )),
+                    child: FittedBox(fit: BoxFit.fitWidth, child: getcount()),
+                  ),
+                ),
+                Expanded(flex: 2, child: SizedBox.shrink()),
+                Expanded(
+                  flex: 32,
+                  child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          border: Border.all(
+                            width: 1.0,
+                          )),
+                      child: FittedBox(
+                        fit: BoxFit.fitWidth,
+                        child: getsum(),
+                      )),
+                ),
+              ],
+            ),
+          ),
+          Expanded(flex: 1, child: SizedBox.shrink()),
+          Expanded(
+            flex: 7,
             child: Row(
               children: [
                 Expanded(flex: 32, child: TextField(controller: moneyCtrl)),
@@ -116,7 +181,17 @@ class _Page11State extends State<Page11> {
                 Expanded(
                   flex: 32,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      OptimizeOrder(
+                              orderlimit: double.parse(moneyCtrl.text),
+                              orderrestrainstrategy: 0)
+                          .optimize()
+                          .then((value) {
+                        setState(() {
+                          log('OptimizeOrder().optimize');
+                        });
+                      });
+                    },
                     child: Text('Ограничение суммы'),
                   ),
                 ),
@@ -124,8 +199,16 @@ class _Page11State extends State<Page11> {
                 Expanded(
                   flex: 32,
                   child: ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Заказать'),
+                    onPressed: () {
+                      AutoOrder().init().then((value) {
+                        log(value.toString());
+                        setState(() {
+                          log('AutoOrder().init');
+                        });
+                      });
+                    },
+                    //child: Text('Заказать'),
+                    child: Text('АвтоЗаказ'),
                   ),
                 ),
               ],
